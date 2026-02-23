@@ -1,0 +1,22 @@
+{
+  "name": "hyean-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack --hostname 127.0.0.1 --port 3000",
+    "dev:turbopack": "next dev --turbopack --hostname 127.0.0.1 --port 3000",
+    "build": "next build --webpack",
+    "build:turbopack": "next build --turbopack",
+    "start": "next start --hostname 127.0.0.1 --port 3000"
+  },
+  "dependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "next": "16.1.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "lucide-react": "^0.562.0",
+    "typescript": "^5"
+  }
+}

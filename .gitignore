@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Node / Next build artifacts
+node_modules/
+**/node_modules/
+apps/hyean-web/.next/
+apps/hyean-web/.next_backup_*/
+
+# Firebase / local logs
+firebase-debug.log
+firebase-debug.*.log
+*.log
+
+# Local environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Large local snapshots (not for GitHub)
+versions/snapshots/*.tar.gz

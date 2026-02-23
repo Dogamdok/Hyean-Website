@@ -1,0 +1,16 @@
+{
+  "apphosting": {
+    "backendId": "hyean-website",
+    "rootDir": "/",
+    "ignore": [
+      "node_modules",
+      ".next",
+      ".next_backup_*",
+      ".git",
+      ".DS_Store",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "functions"
+    ]
+  }
+}

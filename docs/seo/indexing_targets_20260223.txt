@@ -1,0 +1,33 @@
+# HYEAN Indexing Targets
+# generated_at: 2026-02-23 11:55:23 KST
+# site_url: https://hyean.org
+
+https://hyean.org
+https://hyean.org/about
+https://hyean.org/services
+https://hyean.org/projects
+https://hyean.org/spaces
+https://hyean.org/insights
+https://hyean.org/contact
+https://hyean.org/capabilities/learning-execution
+https://hyean.org/capabilities/collaboration-execution
+https://hyean.org/capabilities/performance-management
+https://hyean.org/projects/123-sabi-craft-festa-2024-2025
+https://hyean.org/projects/beyond-village-youth-town-buyeo
+https://hyean.org/projects/buyeo-garden-book-pop-up-garden
+https://hyean.org/projects/buyeo-youth-tourism-pilot-camp
+https://hyean.org/projects/care-worker-awareness-campaign
+https://hyean.org/projects/chungnam-social-economy-campaign
+https://hyean.org/projects/chungnam-youth-intern-chungjeon-campaign
+https://hyean.org/projects/employment-stability-preemptive-package-campaign
+https://hyean.org/projects/gongju-buyeo-cheongyang-youth-exchange-project
+https://hyean.org/projects/hansan-mosi-festival-master-planning
+https://hyean.org/projects/kntc-heritage-plogging-campaign
+https://hyean.org/projects/local-branding-school
+https://hyean.org/projects/local-dive-daegu
+https://hyean.org/projects/local-impact-school-multi-city
+https://hyean.org/projects/seobu-naeryuk-seongjihyeyumgil
+https://hyean.org/insights/catalytic-localism-power-of-small-actions
+https://hyean.org/insights/regional-activation-trends-2025
+https://hyean.org/insights/secret-of-sustainable-partnership
+https://hyean.org/insights/social-venture-business-model
