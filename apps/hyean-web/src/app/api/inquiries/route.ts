@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { saveInquiry } from '@/lib/inquiry-store';
+import { sendInquiryNotificationEmail } from '@/lib/inquiry-email';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -59,6 +60,15 @@ export async function POST(request: Request) {
     }
 
     const record = await saveInquiry(payload);
+    try {
+      const delivery = await sendInquiryNotificationEmail(record);
+      if (delivery === 'skipped') {
+        console.warn('[inquiries] Email notification skipped: mail config is not set.');
+      }
+    } catch (error) {
+      console.error('[inquiries] Failed to send email notification:', error);
+    }
+
     return NextResponse.json(
       {
         message: '문의가 정상 접수되었습니다. 빠르게 확인 후 연락드리겠습니다.',

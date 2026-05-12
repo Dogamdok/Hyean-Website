@@ -25,8 +25,18 @@ type ChatOption = {
   value: string;
 };
 
+type ContactChatAiResponse = {
+  success?: boolean;
+  source?: 'gemini' | 'guard';
+  model?: string;
+  message?: string;
+  filtered?: string;
+};
+
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const namePattern = /^[가-힣a-zA-Z\s.'-]{2,30}$/;
+const questionPattern =
+  /[?？]|(무엇|뭐가|어떻게|왜|가능|설명|알려|도와|가격|비용|일정|기간|차이|추천|방법)/i;
 const weakNameInputs = new Set([
   '뭐야',
   '뭐임',
@@ -91,6 +101,22 @@ function isLikelyContactName(input: string): boolean {
   return namePattern.test(trimmed);
 }
 
+function isLikelyQuestion(input: string): boolean {
+  return questionPattern.test(input.trim());
+}
+
+function getResumePrompt(step: ChatStep): string {
+  if (step === 'name') return '문의 접수를 이어가려면 성함(또는 담당자명)을 입력해 주세요.';
+  if (step === 'organization') return '문의 접수를 이어가려면 소속 기관/회사명을 입력해 주세요. 없으면 "없음"이라고 입력해 주세요.';
+  if (step === 'email') return '문의 접수를 이어가려면 연락받으실 이메일을 입력해 주세요.';
+  if (step === 'focus') return '문의 접수를 이어가려면 협업 초점 옵션 중 하나를 선택해 주세요.';
+  if (step === 'timeline') return '문의 접수를 이어가려면 희망 일정을 선택해 주세요.';
+  if (step === 'budget') return '문의 접수를 이어가려면 예산 범위를 선택해 주세요.';
+  if (step === 'message') return '문의 접수를 이어가려면 문의 내용을 10자 이상 입력해 주세요.';
+  if (step === 'confirm') return '내용이 맞으면 "전송하기", 수정하려면 "문의내용 다시 입력"을 눌러주세요.';
+  return '';
+}
+
 export function ContactChatbot() {
   const [form, setForm] = useState<FormState>(initialFormState);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -106,8 +132,10 @@ export function ContactChatbot() {
   const [step, setStep] = useState<ChatStep>('name');
   const [input, setInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAiAnswering, setIsAiAnswering] = useState(false);
   const threadRef = useRef<HTMLDivElement>(null);
   const hasStartedInquiryRef = useRef(false);
+  const isBusy = isSubmitting || isAiAnswering;
 
   useEffect(() => {
     trackEvent('view_contact', {
@@ -234,18 +262,68 @@ export function ContactChatbot() {
     }
   };
 
+  const answerQuestion = async (question: string) => {
+    if (isAiAnswering) return;
+
+    setIsAiAnswering(true);
+
+    try {
+      const response = await fetch('/api/contact-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question,
+          step,
+          form,
+        }),
+      });
+
+      const payload = (await response.json()) as ContactChatAiResponse;
+      if (!response.ok) {
+        throw new Error(payload.message ?? '질문 응답 중 문제가 발생했습니다.');
+      }
+
+      toBot(payload.message ?? '질문에 대한 답변을 준비하지 못했습니다. 다시 질문해 주세요.');
+      trackEvent('contact_chat_ai_answer', {
+        step,
+        source: payload.source ?? 'gemini',
+        model: payload.model ?? 'gemini-3.1-flash-lite-preview',
+        filtered: payload.filtered ?? 'none',
+      });
+    } catch (error) {
+      trackEvent('contact_chat_ai_answer_error', {
+        step,
+      });
+      toSystem(error instanceof Error ? error.message : '질문 응답 중 오류가 발생했습니다.');
+    } finally {
+      setIsAiAnswering(false);
+    }
+  };
+
   const onAnswer = async (rawInput: string) => {
     const value = rawInput.trim();
-    if (!value || step === 'done' || isSubmitting) return;
+    if (!value || step === 'done' || isBusy) return;
 
     toUser(value);
 
     if (step === 'name') {
       if (value.length < 2) {
+        if (isLikelyQuestion(value)) {
+          await answerQuestion(value);
+          toBot(getResumePrompt(step));
+          return;
+        }
         toBot('성함은 2자 이상으로 입력해 주세요.');
         return;
       }
       if (!isLikelyContactName(value)) {
+        if (isLikelyQuestion(value)) {
+          await answerQuestion(value);
+          toBot(getResumePrompt(step));
+          return;
+        }
         toBot('성함/담당자명 형식으로 다시 입력해 주세요. 예: 김혜안 또는 Hyean Kim');
         return;
       }
@@ -262,6 +340,11 @@ export function ContactChatbot() {
     }
 
     if (step === 'organization') {
+      if (isLikelyQuestion(value)) {
+        await answerQuestion(value);
+        toBot(getResumePrompt(step));
+        return;
+      }
       const normalized = value.toLowerCase();
       const organization = normalized === '없음' || normalized === '없어요' || normalized === 'skip' ? '' : value;
       const nextForm = { ...form, organization };
@@ -272,6 +355,11 @@ export function ContactChatbot() {
 
     if (step === 'email') {
       if (!emailPattern.test(value)) {
+        if (isLikelyQuestion(value)) {
+          await answerQuestion(value);
+          toBot(getResumePrompt(step));
+          return;
+        }
         toBot('이메일 형식이 올바르지 않습니다. 다시 입력해 주세요.');
         return;
       }
@@ -284,6 +372,11 @@ export function ContactChatbot() {
     if (step === 'focus') {
       const matched = matchOption(value, FOCUS_OPTIONS);
       if (!matched) {
+        if (isLikelyQuestion(value)) {
+          await answerQuestion(value);
+          toBot(getResumePrompt(step));
+          return;
+        }
         toBot('아래 버튼 중에서 선택해 주세요.');
         return;
       }
@@ -296,6 +389,11 @@ export function ContactChatbot() {
     if (step === 'timeline') {
       const matched = matchOption(value, TIMELINE_OPTIONS);
       if (!matched) {
+        if (isLikelyQuestion(value)) {
+          await answerQuestion(value);
+          toBot(getResumePrompt(step));
+          return;
+        }
         toBot('일정도 아래 버튼에서 선택해 주세요.');
         return;
       }
@@ -308,6 +406,11 @@ export function ContactChatbot() {
     if (step === 'budget') {
       const matched = matchOption(value, BUDGET_OPTIONS);
       if (!matched) {
+        if (isLikelyQuestion(value)) {
+          await answerQuestion(value);
+          toBot(getResumePrompt(step));
+          return;
+        }
         toBot('예산 범위도 아래 버튼에서 선택해 주세요.');
         return;
       }
@@ -319,6 +422,11 @@ export function ContactChatbot() {
 
     if (step === 'message') {
       if (value.length < 10) {
+        if (isLikelyQuestion(value)) {
+          await answerQuestion(value);
+          toBot(getResumePrompt(step));
+          return;
+        }
         toBot('문의 내용은 10자 이상으로 입력해 주세요.');
         return;
       }
@@ -339,6 +447,11 @@ export function ContactChatbot() {
         setStep('message');
         return;
       }
+      if (isLikelyQuestion(value)) {
+        await answerQuestion(value);
+        toBot(getResumePrompt(step));
+        return;
+      }
       toBot('아래 버튼에서 "전송하기" 또는 "문의내용 다시 입력"을 선택해 주세요.');
     }
   };
@@ -352,6 +465,8 @@ export function ContactChatbot() {
   };
 
   const onOptionClick = async (option: ChatOption) => {
+    if (isBusy) return;
+
     if (step === 'confirm' && option.value === 'submit') {
       toUser(option.label);
       await submitInquiry();
@@ -386,7 +501,7 @@ export function ContactChatbot() {
               type="button"
               className="chat-option-button"
               onClick={() => onOptionClick(option)}
-              disabled={isSubmitting}
+              disabled={isBusy}
             >
               {option.label}
             </button>
@@ -400,10 +515,10 @@ export function ContactChatbot() {
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder={inputPlaceholder}
-          disabled={step === 'done' || isSubmitting}
+          disabled={step === 'done' || isBusy}
         />
-        <button type="submit" className="button" disabled={step === 'done' || isSubmitting}>
-          {isSubmitting ? '접수 중...' : '보내기'}
+        <button type="submit" className="button" disabled={step === 'done' || isBusy}>
+          {isSubmitting ? '접수 중...' : isAiAnswering ? '답변 중...' : '보내기'}
         </button>
       </form>
     </div>

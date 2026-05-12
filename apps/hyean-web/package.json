@@ -7,16 +7,22 @@
     "dev:turbopack": "next dev --turbopack --hostname 127.0.0.1 --port 3000",
     "build": "next build --webpack",
     "build:turbopack": "next build --turbopack",
-    "start": "next start --hostname 127.0.0.1 --port 3000"
+    "start": "next start --hostname 127.0.0.1 --port 3000",
+    "deploy:apphosting": "bash ./scripts/deploy_apphosting.sh",
+    "deploy:apphosting:smoke-inquiry": "RUN_INQUIRY_SMOKE_TEST=1 bash ./scripts/deploy_apphosting.sh"
   },
   "dependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "lucide-react": "^0.562.0",
     "next": "16.1.1",
+    "nodemailer": "^7.0.12",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "lucide-react": "^0.562.0",
     "typescript": "^5"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^7.0.11"
   }
 }

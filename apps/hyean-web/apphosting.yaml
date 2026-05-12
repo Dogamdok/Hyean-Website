@@ -8,16 +8,44 @@ runConfig:
   # memoryMiB: 512
 
 # Environment variables and secrets.
-# env:
-  # Configure environment variables.
-  # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
-  # - variable: MESSAGE
-  #   value: Hello world!
-  #   availability:
-  #     - BUILD
-  #     - RUNTIME
-
-  # Grant access to secrets in Cloud Secret Manager.
-  # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
-  # - variable: MY_SECRET
-  #   secret: mySecretRef
+env:
+  - variable: HYEAN_INQUIRY_EMAIL_ENABLED
+    value: "true"
+    availability:
+      - RUNTIME
+  - variable: HYEAN_INQUIRY_EMAIL_SUBJECT_PREFIX
+    value: "[혜안 웹사이트 문의]"
+    availability:
+      - RUNTIME
+  - variable: HYEAN_INQUIRY_SMTP_HOST
+    value: "smtp.gmail.com"
+    availability:
+      - RUNTIME
+  - variable: HYEAN_INQUIRY_SMTP_PORT
+    value: "465"
+    availability:
+      - RUNTIME
+  - variable: HYEAN_INQUIRY_SMTP_SECURE
+    value: "true"
+    availability:
+      - RUNTIME
+  - variable: HYEAN_INQUIRY_EMAIL_USER
+    secret: HYEAN_INQUIRY_EMAIL_USER
+    availability:
+      - RUNTIME
+  - variable: HYEAN_INQUIRY_EMAIL_PASS
+    secret: HYEAN_INQUIRY_EMAIL_PASS
+    availability:
+      - RUNTIME
+  - variable: HYEAN_INQUIRY_EMAIL_TO
+    secret: HYEAN_INQUIRY_EMAIL_TO
+    availability:
+      - RUNTIME
+  - variable: HYEAN_INQUIRY_EMAIL_FROM
+    secret: HYEAN_INQUIRY_EMAIL_FROM
+    availability:
+      - RUNTIME
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
+    availability:
+      - RUNTIME

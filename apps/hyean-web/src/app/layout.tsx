@@ -79,6 +79,11 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  verification: {
+    other: {
+      'naver-site-verification': 'a199d9f3473d15ac3056bfebc611d321fc61eaac',
+    },
+  },
   icons: {
     icon: [
       { url: '/favicon.ico' },

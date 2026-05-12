@@ -1,10 +1,31 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { mainNav, strategicNav } from '@/data/site';
 
 export function SiteHeader() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.classList.toggle('nav-menu-open', isMenuOpen);
+    return () => {
+      document.body.classList.remove('nav-menu-open');
+    };
+  }, [isMenuOpen]);
+
+  const menuId = 'site-primary-navigation';
+  const menuToggleLabel = isMenuOpen ? '메뉴 닫기' : '메뉴 열기';
+
   return (
-    <header className="site-header">
+    <header className={`site-header${isMenuOpen ? ' is-open' : ''}`}>
       <div className="container nav-wrap">
         <Link href="/" className="brand">
           <Image
@@ -16,9 +37,23 @@ export function SiteHeader() {
             className="brand-logo"
           />
         </Link>
-        <nav className="nav-main" aria-label="Main navigation">
+        <button
+          type="button"
+          className="nav-toggle"
+          aria-expanded={isMenuOpen}
+          aria-controls={menuId}
+          aria-label={menuToggleLabel}
+          onClick={() => setIsMenuOpen((prev) => !prev)}
+        >
+          <span className="nav-toggle-label">{isMenuOpen ? '닫기' : '메뉴'}</span>
+          <span className="nav-toggle-icon" aria-hidden="true">
+            <span />
+            <span />
+          </span>
+        </button>
+        <nav className="nav-main" id={menuId} aria-label="Main navigation">
           {mainNav.map((item) => (
-            <Link key={item.href} href={item.href} className="nav-link">
+            <Link key={item.href} href={item.href} className="nav-link" onClick={() => setIsMenuOpen(false)}>
               {item.label}
             </Link>
           ))}
@@ -26,7 +61,12 @@ export function SiteHeader() {
       </div>
       <div className="container nav-secondary">
         {strategicNav.map((item) => (
-          <Link key={`${item.href}-${item.label}`} href={item.href} className="nav-chip">
+          <Link
+            key={`${item.href}-${item.label}`}
+            href={item.href}
+            className="nav-chip"
+            onClick={() => setIsMenuOpen(false)}
+          >
             {item.label}
           </Link>
         ))}
